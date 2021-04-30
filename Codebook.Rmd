@@ -1,0 +1,446 @@
+---
+title: "Codebook of cleaned data"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+# -------------- #
+# import library
+# -------------- #
+library(foreach)
+library(magrittr)
+library(tidyverse)
+```
+
+```{r}
+# --------- #
+# read data
+# --------- #
+# summary data
+summary <- haven::read_dta("replication_2021/data/summary.dta") %>%
+  haven::zap_formats() %>%
+  tibble::as_tibble()
+# suspension request data
+suspension <- haven::read_dta("replication_2021/data/suspension_request.dta") %>%
+  haven::zap_formats() %>%
+  tibble::as_tibble()
+# survey week data
+surveyweek <- haven::read_dta("replication_2021/data/surveyweek.dta") %>%
+  haven::zap_formats() %>%
+  tibble::as_tibble()
+# subsidy data
+subsidy <- haven::read_dta("replication_2021/data/rd_subsidy.dta") %>%
+  haven::zap_formats() %>%
+  tibble::as_tibble()
+# quarterly sales growth data
+quarter <- haven::read_dta("replication_2021/data/quarterly_salesg.dta") %>%
+  haven::zap_formats() %>%
+  tibble::as_tibble()
+# expected date of lifting
+lifting <- haven::read_dta("replication_2021/data/expected_date_lifting.dta") %>%
+  haven::zap_formats() %>%
+  tibble::as_tibble()
+```
+
+# variables {.tabset}
+
+## summary.dta
+
+### key variables
+
+| column names | definition | unique values |
+|--------------|------------|---------------|
+| `sampleid`| id for respondents | `r length(unique(summary$sampleid))` |
+| `weight`| weight for the Economic Census |  |
+
+### categorical variables
+
+| column names | definition | 
+|--------------|------------|
+| `group2` | survey week (Later = 1) |
+| `lifted_May14` | (declaration lifetd until May 14th = 1) |
+| `pos_inv_q1` | (positive investment in Q1 = 1) |
+| `pos_einv_q2` | (positive expected investment in Q2 = 1) |
+| `pos_disinv_q1` | (negative investment in Q1 = 1) |
+| `pos_edisinv_q2` | (negative expected investment in Q2 = 1) |
+| `num_employee_cat0` | (Number of employees is 0 = 1) |
+| `num_employee_cat1` | (Number of employees is 1 = 1) |
+| `num_employee_cat2` | (Number of employees is 2 = 1) |
+| `num_employee_cat3` | (Number of employees is 3 = 1) |
+| `num_employee_cat4` | (Number of employees is 4 = 1) |
+| `num_employee_cat5` | (Number of employees is 5-19 = 1) |
+| `ind_cat1` | (Business to Consumer service = 1) |
+| `ind_cat2` | (Business to Business service = 1) |
+| `ind_cat3` | (Non-service = 1) |
+| `D20s` | (Managers age is 20s = 1) |
+| `D30s` | (Managers age is 30s = 1) |
+| `D40s` | (Managers age is 40s = 1) |
+| `D50s` | (Managers age is 50s = 1) |
+| `D60s` | (Managers age is 60s = 1) |
+| `D70s` | (Managers age is 70s = 1) |
+| `male` | sex (Male = 1) |
+
+```{r}
+summary %>%
+  dplyr::mutate(group2 = as.character(group2),
+                lifted_May14 = as.character(lifted_May14),
+                pos_inv_q1 = as.character(pos_inv_q1),
+                pos_einv_q2 = as.character(pos_einv_q2),
+                pos_disinv_q1 = as.character(pos_disinv_q1),
+                pos_edisinv_q2 = as.character(pos_edisinv_q2),
+                num_employee_cat0 = as.character(num_employee_cat0),
+                num_employee_cat1 = as.character(num_employee_cat1),
+                num_employee_cat2 = as.character(num_employee_cat2),
+                num_employee_cat3 = as.character(num_employee_cat3),
+                num_employee_cat4 = as.character(num_employee_cat4),
+                num_employee_cat5 = as.character(num_employee_cat5),
+                ind_cat1 = as.character(ind_cat1),
+                ind_cat2 = as.character(ind_cat2),
+                ind_cat3 = as.character(ind_cat3),
+                D20s = as.character(D20s),
+                D30s = as.character(D30s),
+                D40s = as.character(D40s),
+                D50s = as.character(D50s),
+                D60s = as.character(D60s),
+                D70s = as.character(D70s),
+                male = as.character(male)
+                ) %>%
+  modelsummary::datasummary_skim(type = "categorical")
+```
+
+
+### numerical variables
+
+| column names | definition | unit |
+|--------------|------------|------|
+| `emp_q1` | Number of employees | person |
+| `salesg_q1` | realized sales growth in 1Q 2020 compared to the last year | pp |
+| `esalesg_q2_med` | expected sales growth in 2Q 2020 compared to the last year | pp |
+| `esalesg_q3_med` | expected sales growth in 3Q 2020 compared to the last year | pp |
+| `esalesg_q4_med` | expected sales growth in 4Q 2020 compared to the last year | pp |
+| `salesg1` | realized sales growth in January 2020 compared to the last year | pp |
+| `salesg2` | realized sales growth in February 2020 compared to the last year | pp |
+| `salesg3` | realized sales growth in march 2020 compared to the last year | pp |
+| `salesg4` | realized sales growth in April 2020 compared to the last year | pp |
+| `p_contsub` | probability of receiving the continuation subsidy | % |
+| `p_empsub` | probability of receiving the short-time work compensation | % |
+| `p_suspsub` | probability of receiving the business suspension subsidy | % |
+| `p_survive` | probability of f business survival | % |
+| `p_olympic` | probability of of hosting olympic in 2020-21 | % |
+| `tage` | respondents' age | year-old |
+
+```{r}
+summary %>%
+  dplyr::mutate(emp_q1 = as.numeric(emp_q1),
+                salesg_q1 = as.numeric(salesg_q1),
+                esalesg_q2_med = as.numeric(esalesg_q2_med),
+                esalesg_q3_med = as.numeric(esalesg_q3_med),
+                esalesg_q4_med = as.numeric(esalesg_q4_med),
+                salesg1 = as.numeric(salesg1),
+                salesg2 = as.numeric(salesg2),
+                salesg3 = as.numeric(salesg3),
+                salesg4 = as.numeric(salesg4),
+                p_contsub = as.numeric(p_contsub),
+                p_empsub = as.numeric(p_empsub),
+                p_suspsub = as.numeric(p_suspsub),
+                p_survive = as.numeric(p_survive),
+                p_olympic = as.numeric(p_olympic),
+                tage = as.numeric(tage)
+                ) %>% 
+  dplyr::select(emp_q1, salesg_q1, esalesg_q2_med, esalesg_q3_med, esalesg_q4_med, salesg1, salesg2, salesg3, salesg4, p_contsub, p_empsub, p_suspsub, p_survive, p_olympic, tage) %>% 
+  modelsummary::datasummary_skim()
+```
+
+
+## rd_subsidy.dta
+
+### key variables
+
+| column names | definition | unique values |
+|--------------|------------|---------------|
+| `sampleid`| id for respondents | `r length(unique(summary$sampleid))` |
+| `weight`| weight for the Economic Census |  |
+
+### categorical variables
+
+| column names | definition | 
+|--------------|------------|
+| `pos_einv_q2` | (positive expected investment in Q2 = 1) |
+| `pos_edisinv_q2` | (negative expected investment in Q2 = 1) |
+| `cope1` | (Facilitate IT = 1) |
+| `cope2` | (Work from home = 1) |
+| `cope3` | (Online sales = 1) |
+| `cope4` | (Business suspension = 1) |
+| `cope5` | (Establishment closure = 1) |
+| `cope6` | (Employee suspension = 1) |
+| `cope7` | (Underperforming Section closure = 1) |
+| `cope8` | (Cutting suppliers and buyers = 1) |
+| `cope9` | (Develop new product and service = 1) |
+| `cope10` | (Other = 1) |
+| `cope11` | (Nothing = 1) |
+
+```{r}
+subsidy %>%
+  dplyr::mutate(pos_einv_q2 = as.character(pos_einv_q2),
+                pos_edisinv_q2 = as.character(pos_edisinv_q2),
+                cope1 = as.character(cope1),
+                cope2 = as.character(cope2),
+                cope3 = as.character(cope3),
+                cope4 = as.character(cope4),
+                cope5 = as.character(cope5),
+                cope6 = as.character(cope6),
+                cope7 = as.character(cope7),
+                cope8 = as.character(cope8),
+                cope9 = as.character(cope9),
+                cope10 = as.character(cope10),
+                cope11 = as.character(cope11)
+                ) %>%
+  modelsummary::datasummary_skim(type = "categorical")
+```
+
+
+### numerical variables
+
+| column names | definition | unit |
+|--------------|------------|------|
+| `emp_q0` | Number of employees at the end of 2019 | person |
+| `elempg_q2` | log(expected employment at end-June 2020 + 1) - log(employment at end-2019) |  |
+| `visits_change` | log of visit change from Feb to Mar |  |
+| `salesg4` | realized sales growth in April 2020 compared to the last year | pp |
+| `salesg_worst` | worst sales growth in Jan-Apr 2020 | % |
+| `p_contsub` | probability of receiving the continuation subsidy | % |
+| `p_empsub` | probability of receiving the short-time work compensation | % |
+| `p_survive` | probability of f business survival | % |
+| `tcapital` | capital | billion yen |
+| `ln_tcapital` | log of capital |  |
+| `tsales` | sales | billion yen |
+| `ln_tsales` | log of sales |  |
+
+```{r}
+subsidy %>%
+  dplyr::mutate(emp_q0 = as.numeric(emp_q0),
+                elempg_q2 = as.numeric(elempg_q2),
+                visits_change = as.numeric(visits_change),
+                salesg4 = as.numeric(salesg4),
+                salesg_worst = as.numeric(salesg_worst),
+                p_contsub = as.numeric(p_contsub),
+                p_empsub = as.numeric(p_empsub),
+                p_survive = as.numeric(p_survive),
+                tcapital = as.numeric(tcapital),
+                ln_tcapital = as.numeric(ln_tcapital),
+                tsales = as.numeric(tsales),
+                ln_tsales = as.numeric(ln_tsales)                
+                ) %>% 
+  dplyr::select(emp_q0, elempg_q2, visits_change, salesg4, p_contsub, p_empsub, p_survive, tcapital, ln_tcapital, tsales, ln_tsales) %>% 
+  modelsummary::datasummary_skim()
+```
+
+
+## surveyweek.dta
+
+### key variables
+
+| column names | definition | unique values |
+|--------------|------------|---------------|
+| `sampleid`| id for respondents | `r length(unique(summary$sampleid))` |
+| `weight`| weight for the Economic Census |  |
+
+### categorical variables
+
+| column names | definition | 
+|--------------|------------|
+| `group2` | survey week (Later = 1) |
+| `pos_einv_q2` | (positive expected investment in Q2 = 1) |
+| `dserve_bc` | (Facilitate IT = 1) |
+| `suspend` | (Work from home = 1) |
+
+
+```{r}
+surveyweek %>%
+  dplyr::mutate(group2 = as.character(group2),
+                pos_einv_q2 = as.character(pos_einv_q2),
+                dservice_bc = as.character(dservice_bc),
+                suspend = as.character(suspend)
+                ) %>%
+  modelsummary::datasummary_skim(type = "categorical")
+```
+
+### numerical variables
+
+| column names | definition | unit |
+|--------------|------------|------|
+| `esalesg_q2_med` | expected sales growth in 2Q 2020 compared to the last year | pp |
+| `lift_min_c` | expected number of months until the declaration lifting (earliest likely) | month |
+| `lift_max_c` | expected number of months until the declaration lifting (latest case) | month |
+| `lift_med_c` | expected number of months until the declaration lifting (most case) | month |
+| `zerocase_med_c` | expected number of months until zero new infections (most likely)  | month |
+| `elempg_pc_q2` | expected employment growth in 2Q 2020 compared to in 1Q 2020 | % |
+
+```{r}
+surveyweek %>%
+  dplyr::mutate(esalesg_q2_med = as.numeric(esalesg_q2_med),
+                lift_min_c = as.numeric(lift_min_c),
+                lift_max_c = as.numeric(lift_max_c),
+                lift_med_c = as.numeric(lift_med_c),
+                zerocase_med_c = as.numeric(zerocase_med_c),
+                elempg_pc_q2 = as.numeric(elempg_pc_q2)               
+                ) %>% 
+  dplyr::select(esalesg_q2_med, lift_min_c, lift_max_c, lift_med_c, zerocase_med_c, elempg_pc_q2) %>% 
+  modelsummary::datasummary_skim()
+```
+
+
+## quarterly_salesg.dta
+
+### key variables
+
+| column names | definition | unique values |
+|--------------|------------|---------------|
+| `sampleid`| id for respondents | `r length(unique(summary$sampleid))` |
+| `quarter`| quarter |  |
+| `weight`| weight for the Economic Census |  |
+
+### categorical variables
+
+| column names | definition | 
+|--------------|------------|
+| `industry_id` | industry |
+| `zerocase_after` | (the quarter when firm i expects zero infections to be achieved for the first time = 1) |
+| `zerocase_after_pr` | (the quarter prior to the quarter when firm i expects zero infections to be achieved for the first time) |
+| `vaccine_after` | (the quarter when firm i expects mass vaccination to become available = 1) |
+| `vaccine_after_pr` | (the quarter prior to the quarter when mass vaccination to become available = 1) |
+
+```{r}
+quarter %>%
+  dplyr::mutate(zerocase_after = as.character(zerocase_after),
+                zerocase_after_pr = as.character(zerocase_after_pr),
+                vaccine_after = as.character(vaccine_after),
+                vaccine_after_pr = as.character(vaccine_after_pr)
+                ) %>%
+  modelsummary::datasummary_skim(type = "categorical")
+```
+
+### numerical variables
+
+| column names | definition | unit |
+|--------------|------------|------|
+| `salesg_q` | expected sales growth compared to the last year | pp |
+| `zerocase_med_c` | expected number of quarters until zero new infections (most likely) | month |
+| `vaccine_med_c` | expected number of quarters the mass use of vaccine (most likely) | month |
+| `p_olympic` | probability of of hosting olympic in 2020-21 | % divided by 100 |
+
+```{r}
+quarter %>%
+  dplyr::mutate(salesg_q = as.numeric(salesg_q),
+                zerocase_med_c = as.numeric(zerocase_med_c),
+                vaccine_med_c = as.numeric(vaccine_med_c), 
+                p_olympic = as.numeric(p_olympic)
+                ) %>%
+  dplyr::select(salesg_q, zerocase_med_c, vaccine_med_c, p_olympic) %>%
+  modelsummary::datasummary_skim()
+```
+
+
+## expected_date_lifting.dta
+
+### key variables
+
+| column names | definition | unique values |
+|--------------|------------|---------------|
+| `sampleid`| id for respondents | `r length(unique(summary$sampleid))` |
+
+### categorical variables
+
+### categorical variables
+
+| column names | definition | 
+|--------------|------------|
+| `group2` | survey week (Later = 1) |
+| `keep4`| satisfactory criteria for respondents | 
+
+```{r}
+lifting %>%
+  dplyr::mutate(group2 = as.character(group2),
+                keep4 = as.character(keep4)
+                ) %>%
+  modelsummary::datasummary_skim(type = "categorical")
+```
+
+### numerical variables
+
+| column names | definition | unit |
+|--------------|------------|------|
+| `lift_med` | count of days since 01/01/1960 for expected lifting date (most likely) | day |
+| `lift_max` | count of days since 01/01/1960 for expected lifting date (latest case) | day |
+| `lift_min` | count of days since 01/01/1960 for expected lifting date (earliest case) | day |
+
+```{r}
+lifting %>%
+  dplyr::mutate(lift_med = as.numeric(lift_med),
+                lift_min = as.numeric(lift_min),
+                lift_max = as.numeric(lift_max)
+                ) %>%
+  dplyr::select(lift_med, lift_min, lift_max) %>%
+  modelsummary::datasummary_skim()
+```
+
+
+## suspension_request.dta
+
+### key variables
+
+| column names | definition | unique values |
+|--------------|------------|---------------|
+| `sampleid`| id for respondents | `r length(unique(summary$sampleid))` |
+
+### categorical variables
+
+### categorical variables
+
+| column names | definition | 
+|--------------|------------|
+| `freelance` | (respondent is freelancer = 1) |
+| `selfemp`| (respondent is self_employed = 1) | 
+| `no_emp`|  (number of employees is 0 = 1)  | 
+| `travel_hotel`|  (industry is hotel and travel = 1)  | 
+| `school`|  (industry is education = 1)  |
+| `pos_susp`|  (suspension requested = 1)  | 
+| `service`|  (service industry = 1)  | 
+| `emergency_Apr7`|  (early emergensy state = 1)  | 
+
+```{r}
+suspension %>%
+  dplyr::mutate(freelance = as.character(freelance),
+                selfemp = as.character(selfemp),
+                no_emp = as.character(no_emp),
+                travel_hotel = as.character(travel_hotel),
+                school = as.character(school),
+                pos_susp = as.character(pos_susp),
+                service = as.character(service),
+                emergency_Apr7 = as.character(emergency_Apr7),
+                pref_id = as.character(pref_id)
+                ) %>%
+  modelsummary::datasummary_skim(type = "categorical")
+```
+
+### numerical variables
+
+| column names | definition | unit |
+|--------------|------------|------|
+| `new_infection_diff` | new infection change from March to April | 10 thousands |
+| `salesg_diff` | sales growth change from March to April | pp |
+| `risk` | infection risk by industry (from Benzell et al., 2020) |  |
+
+```{r}
+suspension %>%
+  dplyr::mutate(new_infection_diff = as.numeric(new_infection_diff),
+                salesg_diff = as.numeric(salesg_diff),
+                risk = as.numeric(risk)
+                ) %>%
+  dplyr::select(salesg_diff, new_infection_diff, risk) %>%
+  modelsummary::datasummary_skim()
+```
